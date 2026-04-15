@@ -11,6 +11,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 class RoomSelectionBottomSheet(
     private val costs: Map<RoomType, Double>,
     private val hotelRoomCount: Int,
+    private val kitchenCount: Int,
     private val onOptionSelected: (BuildOption) -> Unit
 ) : BottomSheetDialogFragment() {
 
@@ -30,7 +31,8 @@ class RoomSelectionBottomSheet(
         // Dinamik Fiyatlar (MainActivity'den gelen)
         val options = listOf(
             BuildOption(RoomType.HOTEL_ROOM, "Otel Odası", costs[RoomType.HOTEL_ROOM] ?: 50.0, 2.0, android.R.drawable.ic_menu_add),
-            BuildOption(RoomType.RESTAURANT, "Restoran", costs[RoomType.RESTAURANT] ?: 750.0, 15.0, android.R.drawable.ic_menu_today),
+            BuildOption(RoomType.KITCHEN, "Mutfak", costs[RoomType.KITCHEN] ?: 1000.0, 0.0, android.R.drawable.ic_menu_agenda),
+            BuildOption(RoomType.RESTAURANT, "Restoran", costs[RoomType.RESTAURANT] ?: 2000.0, 15.0, android.R.drawable.ic_menu_today, isLocked = kitchenCount < 1),
             BuildOption(RoomType.SPA, "Spa", costs[RoomType.SPA] ?: 4000.0, 60.0, android.R.drawable.ic_menu_view),
             BuildOption(RoomType.BAR, "Bar", costs[RoomType.BAR] ?: 10000.0, 150.0, android.R.drawable.ic_menu_day),
             BuildOption(RoomType.LAUNDRY, "Çamaşırhane", costs[RoomType.LAUNDRY] ?: 12000.0, 200.0, android.R.drawable.ic_menu_save, isLocked = hotelRoomCount < 5)

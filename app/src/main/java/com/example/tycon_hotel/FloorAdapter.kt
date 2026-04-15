@@ -14,8 +14,11 @@ import java.util.Locale
 
 class FloorAdapter(
     private val floorList: List<Floor>,
+    var globalFoodStock: Double = 0.0,
     private val onUpgradeClick: (Floor) -> Unit,
-    private val onHireStaffClick: (Floor) -> Unit
+    private val onHireStaffClick: (Floor) -> Unit,
+    private val onTransferClick: (Floor) -> Unit,
+    private val onUpgradeStorageClick: (Floor) -> Unit
 ) : RecyclerView.Adapter<FloorAdapter.FloorViewHolder>() {
 
     class FloorViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -23,6 +26,8 @@ class FloorAdapter(
         val earnings: TextView = itemView.findViewById(R.id.txtEarnings)
         val btnUpgrade: Button = itemView.findViewById(R.id.btnUpgrade)
         val btnHireStaff: Button = itemView.findViewById(R.id.btnHireStaff)
+        val btnTransferFood: Button = itemView.findViewById(R.id.btnTransferFood)
+        val btnUpgradeStorage: Button = itemView.findViewById(R.id.btnUpgradeStorage)
         val imgWorker: ImageView = itemView.findViewById(R.id.imgWorker)
         val imgBackground: ImageView = itemView.findViewById(R.id.imgFloorBackground)
     }
@@ -35,15 +40,26 @@ class FloorAdapter(
     override fun onBindViewHolder(holder: FloorViewHolder, position: Int) {
         val floor = floorList[position]
         
-        // Başlıkta personel sayısını da gösterelim
-        holder.floorName.text = String.format(Locale.getDefault(), "%s (Lv. %d) [%d Personel]", floor.name, floor.level, floor.staffCount)
+        // Başlıkta personel sayısını göster (Sadece personel alınabilen odalarda)
+        val showStaff = floor.type == RoomType.RESTAURANT || floor.type == RoomType.KITCHEN || floor.type == RoomType.LAUNDRY
         
-        // Mutfak ise üretim miktarını göster
-        if (floor.type == RoomType.KITCHEN) {
-            holder.earnings.text = String.format(Locale.getDefault(), "Üretim: %d Yemek/sn", floor.producesFoodPerSec * floor.staffCount)
-            holder.earnings.setTextColor(Color.parseColor("#FF9800"))
+        if (showStaff) {
+            holder.floorName.text = String.format(Locale.getDefault(), "%s (Lv. %d) [%d Personel]", floor.name, floor.level, floor.staffCount)
         } else {
-            holder.earnings.text = String.format(Locale.getDefault(), "%.2f $/sn", floor.earningsPerSecond * (if(floor.type == RoomType.RESTAURANT) floor.staffCount else 1))
+            holder.floorName.text = String.format(Locale.getDefault(), "%s (Lv. %d)", floor.name, floor.level)
+        }
+        
+        // Mutfak ise üretim miktarını ve biriken yemeği göster
+        if (floor.type == RoomType.KITCHEN) {
+            holder.earnings.text = String.format(Locale.getDefault(), "Üretim: %.1f/sn | Depo: %d/%d", 
+                floor.producesFoodPerSec * floor.staffCount, floor.internalFoodStock.toInt(), floor.maxFoodStorage)
+            holder.earnings.setTextColor(Color.parseColor("#FF9800"))
+        } else if (floor.type == RoomType.RESTAURANT) {
+            val status = if (floor.restaurantTimer > 0) "Yemek Satılıyor: ${floor.restaurantTimer} sn" else "Bekleniyor (5 Yemek Lazım)"
+            holder.earnings.text = String.format(Locale.getDefault(), "Stok: %d | %s", globalFoodStock.toInt(), status)
+            holder.earnings.setTextColor(Color.parseColor("#F44336"))
+        } else {
+            holder.earnings.text = String.format(Locale.getDefault(), "%.2f $/sn", floor.earningsPerSecond)
             holder.earnings.setTextColor(Color.parseColor("#4CAF50"))
         }
 
@@ -51,11 +67,29 @@ class FloorAdapter(
         if (floor.type == RoomType.RECEPTION) {
             holder.btnUpgrade.visibility = View.GONE
             holder.btnHireStaff.visibility = View.GONE
+            holder.btnTransferFood.visibility = View.GONE
         } else {
             holder.btnUpgrade.visibility = View.VISIBLE
-            holder.btnHireStaff.visibility = View.VISIBLE
             holder.btnUpgrade.text = String.format(Locale.getDefault(), "YÜKSELT\n$%.0f", floor.upgradeCost)
-            holder.btnHireStaff.text = String.format(Locale.getDefault(), "PERSONEL AL\n$%.0f", floor.staffCost)
+            
+            if (showStaff) {
+                holder.btnHireStaff.visibility = View.VISIBLE
+                holder.btnHireStaff.text = String.format(Locale.getDefault(), "PERSONEL AL\n$%.0f", floor.staffCost)
+            } else {
+                holder.btnHireStaff.visibility = View.GONE
+            }
+
+            if (floor.type == RoomType.KITCHEN) {
+                holder.btnTransferFood.visibility = View.VISIBLE
+                holder.btnTransferFood.text = String.format(Locale.getDefault(), "AKTARIYOR (%d)", floor.internalFoodStock.toInt())
+                holder.btnTransferFood.isEnabled = floor.internalFoodStock >= 1
+
+                holder.btnUpgradeStorage.visibility = View.VISIBLE
+                holder.btnUpgradeStorage.text = String.format(Locale.getDefault(), "DEPOYU BÜYÜT\n$%.0f", floor.upgradeStorageCost)
+            } else {
+                holder.btnTransferFood.visibility = View.GONE
+                holder.btnUpgradeStorage.visibility = View.GONE
+            }
         }
 
         // Oda türüne göre renk belirleme
@@ -72,6 +106,8 @@ class FloorAdapter(
 
         holder.btnUpgrade.setOnClickListener { onUpgradeClick(floor) }
         holder.btnHireStaff.setOnClickListener { onHireStaffClick(floor) }
+        holder.btnTransferFood.setOnClickListener { onTransferClick(floor) }
+        holder.btnUpgradeStorage.setOnClickListener { onUpgradeStorageClick(floor) }
 
         // Karakter Animasyonu
         val animator = ObjectAnimator.ofFloat(holder.imgWorker, "translationX", 0f, 600f)

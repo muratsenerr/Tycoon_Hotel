@@ -90,6 +90,28 @@
             android:text="YÜKSELT"
             android:textColor="@android:color/white"
             android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/btnTransferFood"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:backgroundTint="#4CAF50"
+            android:text="AKTARIYOR"
+            android:textColor="@android:color/white"
+            android:textSize="10sp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnUpgradeStorage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:backgroundTint="#9C27B0"
+            android:text="DEPOYU BÜYÜT"
+            android:textColor="@android:color/white"
+            android:textSize="10sp"
+            android:visibility="gone" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

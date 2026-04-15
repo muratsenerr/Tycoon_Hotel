@@ -14,6 +14,10 @@ data class Floor(
     val type: RoomType,
     var staffCount: Int = 1,
     var staffCost: Double = 100.0,
-    var producesFoodPerSec: Int = 0,
-    var consumesFoodPerSec: Int = 0
+    var producesFoodPerSec: Double = 0.0,
+    var consumesFoodPerSec: Double = 0.0,
+    var internalFoodStock: Double = 0.0,
+    var restaurantTimer: Int = 0,
+    var maxFoodStorage: Int = 10,
+    var upgradeStorageCost: Double = 500.0
 )
